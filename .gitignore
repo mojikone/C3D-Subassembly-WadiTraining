@@ -1,0 +1,30 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.dll
+*.pdb
+*.exe
+
+# Build output
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# Test results
+TestResults/
+*.trx
+
+# OS / editor
+Thumbs.db
+.DS_Store
+*.swp
+*~
+
+# Civil 3D / AutoCAD scratch
+*.bak
+*.dwl
+*.dwl2
