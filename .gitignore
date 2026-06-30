@@ -1,30 +1,12 @@
-# .NET / Visual Studio
-bin/
-obj/
-.vs/
-*.user
-*.suo
-*.userprefs
-*.dll
-*.pdb
-*.exe
-
-# Build output
-[Dd]ebug/
-[Rr]elease/
-artifacts/
-
-# Test results
-TestResults/
-*.trx
-
-# OS / editor
+# Windows / editor noise
 Thumbs.db
-.DS_Store
-*.swp
-*~
-
-# Civil 3D / AutoCAD scratch
+Desktop.ini
+*.tmp
 *.bak
-*.dwl
-*.dwl2
+~$*
+
+# Local scratch outputs
+output/*.source_unzipped/
+output/obsolete_*/
+tests/tmp-*
+tools/
