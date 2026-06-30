@@ -62,3 +62,14 @@ Generated Civil 3D-ready packet:
 - removes `GroundSample` point codes so sample points are not styled by code set
 - restores visible surface links using normal SAC links between terrain sample points
 - keeps concave break diamond markers and protection links
+
+## v012 Packet
+
+Generated Civil 3D-ready packet:
+- `output/LeveeOnly.LeftBank.v012.civil3d.pkt`
+- restores true `StripSurfaceActivity` surface-following links for yellow ground and cyan protection
+- sets strip layout depth to the wadi toe elevation to avoid the old crown-level suspended preview line
+- adds fixed toe scour and apron protection from the wadi-side toe
+- keeps convex break markers visible for logic checking
+- keeps auxiliary sample points uncoded so they are not styled as output points
+- skips adaptive concave protection inside the fixed toe scour/apron zone

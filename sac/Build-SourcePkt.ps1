@@ -3,8 +3,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $xamlPath = Join-Path $PSScriptRoot "LeveeOnly.LeftBank.xaml"
 $outputDir = Join-Path $root "output"
-$packageName = "LeveeOnly.LeftBank.v011"
-$toolName = "LeveeOnly_LeftBank_v011"
+$packageName = "LeveeOnly.LeftBank.v012"
+$toolName = "LeveeOnly_LeftBank_v012"
 $packageDir = Join-Path $outputDir "$packageName.source_unzipped"
 $pktPath = Join-Path $outputDir "$packageName.source.pkt"
 $civilPktPath = Join-Path $outputDir "$packageName.civil3d.pkt"
@@ -45,8 +45,8 @@ $atc = @"
         <Images>
           <Image cx="64" cy="64" />
         </Images>
-        <Description>Left-bank levee with hidden auxiliary terrain sampling, visible ground links, mild-trend confirmed concave protection, and large concave break markers.</Description>
-        <ToolTip>Version: 0.11</ToolTip>
+        <Description>Left-bank levee with toe scour/apron protection, true surface-following terrain links, visible convex/concave break markers, and mild-trend confirmed concave protection.</Description>
+        <ToolTip>Version: 0.12</ToolTip>
         <Help>
           <HelpFile />
           <HelpCommand />
@@ -59,7 +59,7 @@ $atc = @"
         <AeccDbSubassembly>
           <GeometryGenerateMode>UseDotNet</GeometryGenerateMode>
           <DotNetClass Assembly="$guid.dll">Subassembly.$toolName</DotNetClass>
-          <Version>0.11</Version>
+          <Version>0.12</Version>
           <Params>
             <Side DataType="long" TypeInfo="16" DisplayName="Side" Description="Side">-1<Enum><None DisplayName="None">-1</None><Left DisplayName="Left">1</Left><Right DisplayName="Right">0</Right></Enum></Side>
             <CrownWidth DataType="double" TypeInfo="16" DisplayName="Crown Width" Description="Levee crown width">4</CrownWidth>
@@ -67,6 +67,8 @@ $atc = @"
             <SampleInterval DataType="double" TypeInfo="16" DisplayName="Sample Interval" Description="Horizontal terrain sample spacing from wadi toe toward thalweg">1</SampleInterval>
             <MaxScanDistance DataType="double" TypeInfo="16" DisplayName="Max Scan Distance" Description="Fallback terrain scan distance from wadi toe when thalweg target is not assigned">250</MaxScanDistance>
             <SlopeChangeThreshold DataType="double" TypeInfo="16" DisplayName="Slope Change Threshold" Description="Relative slope trend change that triggers a terrain break">0.1</SlopeChangeThreshold>
+            <ToeScourLength DataType="double" TypeInfo="16" DisplayName="Toe Scour Length" Description="Fixed surface-following scour protection length from the wadi-side toe">2</ToeScourLength>
+            <ToeApronLength DataType="double" TypeInfo="16" DisplayName="Toe Apron Length" Description="Fixed surface-following apron length after the toe scour segment toward thalweg">5</ToeApronLength>
             <MinMildTrendLength DataType="double" TypeInfo="16" DisplayName="Min Mild Trend Length" Description="Minimum continuing mild run after a concave candidate before accepting the protection break">5</MinMildTrendLength>
             <MinSteepLength DataType="double" TypeInfo="16" DisplayName="Minimum Steep Length" Description="Minimum steep run length needed before a concave break is protected">0.6</MinSteepLength>
             <MildProtectionLength DataType="double" TypeInfo="16" DisplayName="Mild Protection Length" Description="Protection length placed on the confirmed mild surface after a concave break">2</MildProtectionLength>
