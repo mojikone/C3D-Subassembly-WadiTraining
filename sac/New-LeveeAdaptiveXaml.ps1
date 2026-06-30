@@ -136,11 +136,6 @@ function CreateAuxDeltaXOnSurface {
             <InArgument x:TypeArguments="asw:OffsetTarget" x:Key="OffsetTarget4" />
             <InArgument x:TypeArguments="x:Double" x:Key="DeltaYForLayout4">0</InArgument>
           </asa2:CreatePoint.Arguments>
-          <asa2:CreatePoint.PointCodes>
-            <scg:List x:TypeArguments="InArgument(x:String)" Capacity="4">
-              <InArgument x:TypeArguments="x:String">GroundSample</InArgument>
-            </scg:List>
-          </asa2:CreatePoint.PointCodes>
         </asa2:CreatePoint>
 "@
 }
@@ -328,8 +323,8 @@ function BuildCandidateProtectionNode {
     $mergeCondition = "HasProtection = 1 AndAlso (ProtectionStartX - LastProtectionEndX) <= MergeDistance"
 
     $afterMerge = ChainSteps @(
-        (CreateStripSurface "PRS$I" "[ProtectionStartX]" "[CandidateX]" "PS$I" "PCS$I" "PRS$I steep protection on surface" @("Top", "Protection", "ProtectionCyan", "ProtectionSteep") @("ProtectionStart", "ProtectionCyan") @("ProtectionBreak", "ProtectionCyan")),
-        (CreateStripSurface "PRM$I" "[CandidateX]" "[ProtectionEndX]" "PCM$I" "PM$I" "PRM$I mild protection on surface" @("Top", "Protection", "ProtectionCyan", "ProtectionMild") @("ProtectionBreak", "ProtectionCyan") @("ProtectionEnd", "ProtectionCyan")),
+        (CreateLink "PRS$I" "PS$I" "CC$I" "PRS$I steep protection" @("Top", "Protection", "ProtectionCyan", "ProtectionSteep")),
+        (CreateLink "PRM$I" "CC$I" "PM$I" "PRM$I mild protection" @("Top", "Protection", "ProtectionCyan", "ProtectionMild")),
         (AssignVar "x:Int32" "HasProtection" "1" "HasProtection = 1"),
         (AssignVar "x:Double" "LastProtectionStartX" "[ProtectionStartX]" "LastProtectionStartX = PS$I"),
         (AssignVar "x:Double" "LastProtectionEndX" "[ProtectionEndX]" "LastProtectionEndX = PM$I"),
@@ -340,15 +335,19 @@ function BuildCandidateProtectionNode {
         (AssignVar "x:Int32" "CandidateActive" "0" "CandidateActive = 0"),
         (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 after protection")
     ) $Next
-    $mergeGap = AddFlowDecision "ProtectionStartX - LastProtectionEndX > 0.001" (AddFlowStep (CreateStripSurface "MG$I" "[LastProtectionEndX]" "[ProtectionStartX]" "MGS$I" "MGE$I" "MG$I merged protection gap on surface" @("Top", "Protection", "ProtectionCyan", "ProtectionMerge") @("ProtectionMergeStart", "ProtectionCyan") @("ProtectionMergeEnd", "ProtectionCyan")) $afterMerge) $afterMerge
-    $surfaceBefore = AddFlowDecision "ProtectionStartX - SurfaceRunStartX > 0.001" (AddFlowStep (CreateStripSurface "SF$I" "[SurfaceRunStartX]" "[ProtectionStartX]" "SFS$I" "SFE$I" "SF$I surface run before protection" @("Top", "ExistingGround", "SurfaceLink", "SurfaceYellow") @("SurfacePoint", "SurfaceYellow") @("SurfacePoint", "SurfaceYellow")) $afterMerge) $afterMerge
-    $preProtectionNode = AddFlowDecision $mergeCondition $mergeGap $surfaceBefore
+    $mergeGap = AddFlowDecision "ProtectionStartX - LastProtectionEndX > 0.001" (ChainSteps @(
+        (CreatePointDeltaXOnSurface "LM$I" "CC$I" "[LastProtectionEndX - CandidateX]" "LM$I previous protection end" @() $false),
+        (CreateLink "MG$I" "LM$I" "PS$I" "MG$I merged protection gap" @("Top", "Protection", "ProtectionCyan", "ProtectionMerge"))
+    ) $afterMerge) $afterMerge
+    $preProtectionNode = AddFlowDecision $mergeCondition $mergeGap $afterMerge
 
     $markerActivities = CreateBreakMarkerActivities "CCM$I" "CC$I" @("BreakMarker", "ConcaveBreakMarker", "ProtectionCyan")
     return ChainSteps (@(
         (AssignVar "x:Double" "ProtectionStartX" "[$protStartX]" "ProtectionStartX = $I"),
         (AssignVar "x:Double" "ProtectionEndX" "[CandidateX + MildProtectionLength]" "ProtectionEndX = $I"),
-        (CreatePointDeltaXOnSurface "CC$I" $CurrentPoint "[CandidateX - $CurrentPoint.X]" "CC$I confirmed concave break on surface" @("ConcaveBreak", "ProtectionBreak", "ProtectionCyan") $true)
+        (CreatePointDeltaXOnSurface "CC$I" $CurrentPoint "[CandidateX - $CurrentPoint.X]" "CC$I confirmed concave break on surface" @("ConcaveBreak", "ProtectionBreak", "ProtectionCyan") $true),
+        (CreatePointDeltaXOnSurface "PS$I" "CC$I" "[ProtectionStartX - CandidateX]" "PS$I protection start on surface" @("ProtectionStart", "ProtectionCyan") $false),
+        (CreatePointDeltaXOnSurface "PM$I" "CC$I" "[MildProtectionLength]" "PM$I protection end on surface" @("ProtectionEnd", "ProtectionCyan") $false)
     ) + $markerActivities) $preProtectionNode
 }
 
@@ -359,6 +358,7 @@ function BuildSampleNode {
     if ($I -eq 1) {
         $sampleChain = ChainSteps @(
             (CreateAuxDeltaXOnSurface $ap $prev "[SampleInterval]" "$ap 1m ground sample"),
+            (CreateLink "SG$I" $prev $ap "SG$I ground surface link" @("Top", "ExistingGround", "SurfaceLink", "SurfaceYellow")),
             (AssignVar "x:Double" "LastSampleX" "[$ap.X]" "LastSampleX = $ap"),
             (AssignVar "x:Double" "CurrSlope" "[If(Math.Abs($ap.X - RefX) < 0.000001, 0, ($ap.Y - RefY) / ($ap.X - RefX))]" "CurrSlope $ap"),
             (AssignVar "x:Double" "LocalSlope" "[CurrSlope]" "LocalSlope AP1"),
@@ -384,10 +384,7 @@ function BuildSampleNode {
             (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 after break")
         ) $Next
         $convexCondition = "LocalSlope < PrevSlope AndAlso Math.Abs(LocalSlope) > Math.Abs(PrevSlope)"
-        $convexMarker = ChainSteps (@(
-            (CreatePointDelta "CV$I" $breakPoint "0" "0" "CV$I convex break marker" @("ConvexBreak", "IgnoredBreak", "ConvexMarker"))
-        ) + (CreateBreakMarkerActivities "CVM$I" "CV$I" @("BreakMarker", "ConvexBreakMarker", "IgnoredBreak"))) $afterBreak
-        $afterProtection = AddFlowDecision $convexCondition $convexMarker $afterBreak
+        $afterProtection = AddFlowDecision $convexCondition $afterBreak $afterBreak
         $candidateCondition = "PrevSlope < LocalSlope AndAlso Math.Abs(PrevSlope) > Math.Abs(LocalSlope) AndAlso ($breakPoint.X - RefX) >= MinSteepLength"
         $protectNode = AddFlowDecision $candidateCondition $afterCandidate $afterProtection
         $noBreak = ChainSteps @(
@@ -396,10 +393,11 @@ function BuildSampleNode {
         ) $Next
         $breakCondition = "HavePrevSlope = 1 AndAlso Math.Abs(CurrSlope - PrevSlope) >= SlopeChangeThreshold * Math.Max(Math.Abs(PrevSlope), 0.001)"
         $breakDecision = AddFlowDecision $breakCondition $protectNode $noBreak
-        $confirmCondition = "CandidateActive = 1 AndAlso ($ap.X - CandidateX) >= MinMildTrendLength AndAlso Math.Abs(MildTrendSlope - CandidateMildSlope) <= SlopeChangeThreshold * Math.Max(Math.Abs(CandidateMildSlope), 0.001) AndAlso CandidateSteepSlope < MildTrendSlope AndAlso Math.Abs(CandidateSteepSlope) > Math.Abs(MildTrendSlope) AndAlso CandidateSteepLength >= MinSteepLength AndAlso CandidateX + MildProtectionLength <= ScanLimitX"
+        $confirmCondition = "CandidateActive = 1 AndAlso ($ap.X - CandidateX) >= MinMildTrendLength AndAlso CandidateSteepSlope < MildTrendSlope AndAlso Math.Abs(CandidateSteepSlope) > Math.Abs(MildTrendSlope) AndAlso CandidateSteepLength >= MinSteepLength AndAlso CandidateX + MildProtectionLength <= ScanLimitX"
         $confirmDecision = AddFlowDecision $confirmCondition (BuildCandidateProtectionNode $I $ap $Next) $breakDecision
         $sampleChain = ChainSteps @(
             (CreateAuxDeltaXOnSurface $ap $prev "[SampleInterval]" "$ap 1m ground sample"),
+            (CreateLink "SG$I" $prev $ap "SG$I ground surface link" @("Top", "ExistingGround", "SurfaceLink", "SurfaceYellow")),
             (AssignVar "x:Double" "LastSampleX" "[$ap.X]" "LastSampleX = $ap"),
             (AssignVar "x:Double" "CurrSlope" "[If(Math.Abs($ap.X - RefX) < 0.000001, 0, ($ap.Y - RefY) / ($ap.X - RefX))]" "CurrSlope $ap"),
             (AssignVar "x:Double" "LocalSlope" "[If(Math.Abs($ap.X - $breakPoint.X) < 0.000001, 0, ($ap.Y - $breakPoint.Y) / ($ap.X - $breakPoint.X))]" "LocalSlope $breakPoint to $ap"),
@@ -410,7 +408,7 @@ function BuildSampleNode {
     return AddFlowDecision $scanCondition $sampleChain $Next
 }
 
-$finishNode = AddFlowDecision "ScanLimitX - SurfaceRunStartX > 0.001" (AddFlowStep (CreateStripSurface "SF_Final" "[SurfaceRunStartX]" "[ScanLimitX]" "SFFS" "SFFE" "Final surface run to scan limit" @("Top", "ExistingGround", "SurfaceLink", "SurfaceYellow") @("SurfacePoint", "SurfaceYellow") @("SurfacePoint", "SurfaceYellow")) "") ""
+$finishNode = ""
 
 $sampleNode = $finishNode
 for ($i = $sampleCount; $i -ge 1; $i--) {

@@ -3,12 +3,12 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $xamlPath = Join-Path $PSScriptRoot "LeveeOnly.LeftBank.xaml"
 $outputDir = Join-Path $root "output"
-$packageName = "LeveeOnly.LeftBank.v010"
-$toolName = "LeveeOnly_LeftBank_v010"
+$packageName = "LeveeOnly.LeftBank.v011"
+$toolName = "LeveeOnly_LeftBank_v011"
 $packageDir = Join-Path $outputDir "$packageName.source_unzipped"
 $pktPath = Join-Path $outputDir "$packageName.source.pkt"
 $civilPktPath = Join-Path $outputDir "$packageName.civil3d.pkt"
-$guid = "e918b289d4c54ff88397d16e7d4f0030"
+$guid = "e918b289d4c54ff88397d16e7d4f0040"
 
 if (Test-Path -LiteralPath $packageDir) {
     Remove-Item -LiteralPath $packageDir -Recurse -Force
@@ -26,7 +26,7 @@ Copy-Item -LiteralPath $xamlPath -Destination (Join-Path $packageDir "$guid.xaml
 $atc = @"
 <?xml version="1.0"?>
 <Category xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ItemID idValue="{e918b289-d4c5-4ff8-8397-d16e7d4f0030}" />
+  <ItemID idValue="{e918b289-d4c5-4ff8-8397-d16e7d4f0040}" />
   <Properties>
     <ItemName>W1</ItemName>
     <Images>
@@ -39,14 +39,14 @@ $atc = @"
   <Packages />
   <Tools>
     <Tool Name="$toolName">
-      <ItemID idValue="{e918b289-d4c5-4ff8-8397-d16e7d4f0031}" />
+      <ItemID idValue="{e918b289-d4c5-4ff8-8397-d16e7d4f0041}" />
       <Properties>
         <ItemName>$toolName</ItemName>
         <Images>
           <Image cx="64" cy="64" />
         </Images>
-        <Description>Left-bank levee with 1 m auxiliary terrain sampling, true surface-strip links, mild-trend confirmed concave protection, large break markers, and merge links.</Description>
-        <ToolTip>Version: 0.10</ToolTip>
+        <Description>Left-bank levee with hidden auxiliary terrain sampling, visible ground links, mild-trend confirmed concave protection, and large concave break markers.</Description>
+        <ToolTip>Version: 0.11</ToolTip>
         <Help>
           <HelpFile />
           <HelpCommand />
@@ -59,7 +59,7 @@ $atc = @"
         <AeccDbSubassembly>
           <GeometryGenerateMode>UseDotNet</GeometryGenerateMode>
           <DotNetClass Assembly="$guid.dll">Subassembly.$toolName</DotNetClass>
-          <Version>0.10</Version>
+          <Version>0.11</Version>
           <Params>
             <Side DataType="long" TypeInfo="16" DisplayName="Side" Description="Side">-1<Enum><None DisplayName="None">-1</None><Left DisplayName="Left">1</Left><Right DisplayName="Right">0</Right></Enum></Side>
             <CrownWidth DataType="double" TypeInfo="16" DisplayName="Crown Width" Description="Levee crown width">4</CrownWidth>

@@ -16,13 +16,13 @@
 12. Do not protect immediately.
 13. Confirm the candidate only when the mild trend continues at least `MinMildTrendLength`.
 14. Reject short mild runs and continue scanning.
-15. At a mild-to-steep change, create a visible convex marker and skip protection.
+15. At a mild-to-steep change, skip protection and do not draw a marker.
 16. At accepted concave breaks, create a visible concave marker.
-17. Place protection using surface strips:
+17. Place protection using ground points and normal SAC links:
    - steep side length capped by `MaxSteepProtectionLength`
    - mild side length = `MildProtectionLength`
-18. Protection strip start/end points are generated on `ExistingGround`.
-19. Generate existing-ground surface strips only between protection runs.
+18. Protection start/end points are generated on `ExistingGround`.
+19. Generate existing-ground surface links between hidden auxiliary sample points.
 20. Merge close protection runs when gap <= `MergeDistance`.
 21. Set the accepted concave break as the new terrain reference.
 22. Continue until thalweg target or fallback scan distance.

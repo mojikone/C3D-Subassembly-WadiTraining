@@ -10,19 +10,19 @@ It is intended for wadi flood-protection training and early geometry testing:
 - draw levee crown and both side slopes
 - sample existing ground from the wadi toe toward thalweg
 - detect concave slope breaks using reference-point terrain trends
-- ignore convex breaks but mark them visibly for checking
+- ignore convex breaks without drawing markers
 - place protection links on confirmed concave breaks
-- use surface-strip links so visible ground/protection runs follow the Civil 3D surface, not straight sample chords
+- use visible ground links between hidden auxiliary sample points
 
 ## Current Deliverable
 
 Use this packet in Civil 3D:
 
-- `output/LeveeOnly.LeftBank.v010.civil3d.pkt`
+- `output/LeveeOnly.LeftBank.v011.civil3d.pkt`
 
 The source packet is also included:
 
-- `output/LeveeOnly.LeftBank.v010.source.pkt`
+- `output/LeveeOnly.LeftBank.v011.source.pkt`
 
 ## Required Targets
 
@@ -63,10 +63,11 @@ Civil 3D colors are controlled by the Code Set Style. The PKT assigns these code
 | `ProtectionMild` | Cyan | Protection on the mild side of a concave break. |
 | `ProtectionMerge` | Cyan | Merged protection gap between close protection runs. |
 | `ConcaveBreakMarker` | Cyan or magenta | Large visible marker at accepted concave break. |
-| `ConvexBreakMarker` | Red or gray | Temporary visible marker at ignored convex break. |
 
 ## Notes
 
 - Break markers are diamond link markers because SAC line geometry does not provide true circle symbols.
-- Auxiliary sample points are used for calculations; visible surface and protection links use surface strips.
+- Auxiliary sample points are used for calculations and have no point codes.
+- Convex breaks are ignored and no longer drawn.
+- `v011` avoids `StripSurfaceActivity` because it produced a suspended layout-preview line in SAC/Civil testing.
 - This is still line-only geometry: no closed shapes are included.
