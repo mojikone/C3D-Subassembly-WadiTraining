@@ -1,12 +1,7 @@
-# Windows / editor noise
-Thumbs.db
-Desktop.ini
-*.tmp
-*.bak
-~$*
-
-# Local scratch outputs
-output/*.source_unzipped/
-output/obsolete_*/
-tests/tmp-*
-tools/
+bin/
+obj/
+reference/
+output/pkt-staging/
+tools/.dotnet-tools/
+*.pdb
+*.deps.json

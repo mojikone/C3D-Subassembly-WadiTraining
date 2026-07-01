@@ -1,72 +1,59 @@
-# C3D Subassembly Wadi Training
+# Wadi Training Levee Subassembly W2
 
-Terrain-adaptive left-bank wadi levee subassembly for Civil 3D 2026 / Subassembly Composer.
+Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection.
 
-## Purpose
+## Output
 
-This packet draws a left-bank levee, fixed toe scour/apron protection, and terrain-adaptive protection at accepted concave ground breaks toward the thalweg.
+- Draws levee crown, wadi-side face, and land-side face.
+- Finds the wadi-side toe by daylighting the levee slope to `ExistingGround`.
+- Draws toe scour and apron protection from the wadi-side toe toward the thalweg.
+- Scans existing ground toward `ThalwegOffset` if assigned, otherwise to `Max Scan Distance`.
+- Fits terrain trend lines and marks their intersection as:
+  - `WT_Concave`: concave break marker, protected.
+  - `WT_Convex`: convex break marker, shown for debugging only.
+- Draws continuous ground-following links:
+  - `WT_Surface`: unprotected surface links.
+  - `WT_Protection`, `WT_ToeScour`, `WT_ToeApron`: protection links.
 
-## Current Deliverable
+## Required Target
 
-Use this Civil 3D import packet:
+- `ExistingGround`: surface target.
 
-- `output/LeveeOnly.LeftBank.v013.civil3d.pkt`
+## Optional Targets
 
-Source packet:
+- `ThalwegOffset`: offset target that stops one-side scanning.
+- `LeftBankCrownOffset`, `RightBankCrownOffset`: used only when `Bank Mode = Both`.
+- `LeftBankCrownElevation`, `RightBankCrownElevation`: reserved for later both-bank elevation targeting.
 
-- `output/LeveeOnly.LeftBank.v013.source.pkt`
+## Main Parameters
 
-## Required Targets
+- `Bank Mode`: Right, Left, or Both.
+- `Crown Width`: levee crown width.
+- `Levee Side Slope`: vertical/horizontal grade; `0.5` means 1V:2H.
+- `Max Scan Distance`: fallback scan length when thalweg is missing.
+- `Analysis Sample Interval`: spacing used only for trend analysis.
+- `Trend Window Length`: length used on each side to fit trend lines.
+- `Min Mild Trend Length`: minimum mild trend length needed to accept a break.
+- `Min Steep Trend Length`: minimum steep trend length needed to accept a break.
+- `Slope Change Threshold`: dimensionless ratio; `0.20` means 20 percent.
+- `Max Trend Residual`: maximum RMS vertical error for fitted trend lines.
+- `Min Break Spacing`: suppresses duplicate same-kind break markers.
+- `Mild Protection Length`: protected length on mild side of concave break.
+- `Max Steep Protection Length`: capped protected length up steep side.
+- `Merge Distance`: merges nearby protection intervals.
+- `Toe Scour Length`: toe scour protection length, default `2 m`.
+- `Toe Apron Length`: apron protection length, default `2 m`.
+- `Break Marker Size`: visible diamond marker size.
+- `Show Convex Markers`: shows convex breaks for debugging.
 
-- `Existing Ground`: required surface target.
-- `Thalweg Offset`: optional offset target. If assigned, scanning stops there. If not assigned, scanning stops at `Max Scan Distance`.
+## Package
 
-The origin is the wadi-side crown edge. Set the corridor/profile elevation there from your hydraulic line.
+Generated packet:
 
-## What It Draws
+`output/WadiTrainingLevee_W2.pkt`
 
-- Levee crown, landward daylight slope, and wadi-side daylight slope.
-- Fixed cyan scour protection from the wadi-side toe.
-- Fixed cyan apron after the toe scour segment toward thalweg.
-- Yellow existing-ground surface-snapped links between protection zones.
-- Cyan surface-snapped protection links at accepted concave breaks.
-- Cyan merge links when protection runs are close enough to merge.
-- Large visible concave and convex break marker diamonds at computed trend intersections.
+Build command:
 
-Auxiliary 1 m sample points are calculation helpers only and have no display codes.
-
-## Input Parameters
-
-| Parameter | Default | Purpose |
-|---|---:|---|
-| `Crown Width` | `4.0 m` | Levee crest width. |
-| `Levee Side Slope` | `0.5` | Grade value for 1V:2H side slopes. |
-| `Sample Interval` | `1.0 m` | Hidden auxiliary terrain sample spacing. |
-| `Max Scan Distance` | `250 m` | Scan limit when `Thalweg Offset` is not assigned. |
-| `Slope Change Threshold` | `0.10` | Relative terrain trend change that creates a break candidate. |
-| `Toe Scour Length` | `2.0 m` | Fixed scour protection length from the wadi-side toe. |
-| `Toe Apron Length` | `5.0 m` | Fixed apron length after the toe scour segment. |
-| `Min Mild Trend Length` | `5.0 m` | Required continuing mild run after a concave candidate before acceptance. |
-| `Minimum Steep Length` | `0.6 m` | Minimum steep run before a concave candidate can be protected. |
-| `Mild Protection Length` | `2.0 m` | Protection length placed on the mild side of an accepted concave break. |
-| `Maximum Steep Protection Length` | `3.0 m` | Cap on protection length extending up the steep side. |
-| `Break Marker Size` | `0.5 m` | Half-size of visible diamond break markers. |
-| `Merge Distance` | `5.0 m` | Maximum gap for merging adjacent protection runs. |
-
-## Codes
-
-Map these codes in your Civil 3D Code Set Style:
-
-| Code | Recommended color | Meaning |
-|---|---|---|
-| `SurfaceYellow` | Yellow | Existing-ground links where no protection is placed. |
-| `ProtectionCyan` | Cyan | All protection geometry. |
-| `ToeScourProtection` | Cyan | Fixed toe scour protection. |
-| `ToeApronProtection` | Cyan | Fixed bed apron protection. |
-| `ProtectionSteep` | Cyan | Protection up the steep side of an accepted concave break. |
-| `ProtectionMild` | Cyan | Protection on the mild side of an accepted concave break. |
-| `ProtectionMerge` | Cyan | Joined gap between close protection runs. |
-| `ConcaveBreakMarker` | Cyan | Accepted concave break marker. |
-| `ConvexBreakMarker` | Any visible color | Ignored convex break marker for checking logic. |
-
-This is still line-only geometry. No shapes are included.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Pkt.ps1
+```
