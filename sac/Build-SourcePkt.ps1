@@ -3,8 +3,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $xamlPath = Join-Path $PSScriptRoot "LeveeOnly.LeftBank.xaml"
 $outputDir = Join-Path $root "output"
-$packageName = "LeveeOnly.LeftBank.v012"
-$toolName = "LeveeOnly_LeftBank_v012"
+$packageName = "LeveeOnly.LeftBank.v013"
+$toolName = "LeveeOnly_LeftBank_v013"
 $packageDir = Join-Path $outputDir "$packageName.source_unzipped"
 $pktPath = Join-Path $outputDir "$packageName.source.pkt"
 $civilPktPath = Join-Path $outputDir "$packageName.civil3d.pkt"
@@ -45,8 +45,8 @@ $atc = @"
         <Images>
           <Image cx="64" cy="64" />
         </Images>
-        <Description>Left-bank levee with toe scour/apron protection, true surface-following terrain links, visible convex/concave break markers, and mild-trend confirmed concave protection.</Description>
-        <ToolTip>Version: 0.12</ToolTip>
+        <Description>Left-bank levee with surface-snapped toe scour/apron links, trend-intersection convex/concave markers, and mild-trend confirmed concave protection.</Description>
+        <ToolTip>Version: 0.13</ToolTip>
         <Help>
           <HelpFile />
           <HelpCommand />
@@ -59,7 +59,7 @@ $atc = @"
         <AeccDbSubassembly>
           <GeometryGenerateMode>UseDotNet</GeometryGenerateMode>
           <DotNetClass Assembly="$guid.dll">Subassembly.$toolName</DotNetClass>
-          <Version>0.12</Version>
+          <Version>0.13</Version>
           <Params>
             <Side DataType="long" TypeInfo="16" DisplayName="Side" Description="Side">-1<Enum><None DisplayName="None">-1</None><Left DisplayName="Left">1</Left><Right DisplayName="Right">0</Right></Enum></Side>
             <CrownWidth DataType="double" TypeInfo="16" DisplayName="Crown Width" Description="Levee crown width">4</CrownWidth>

@@ -10,11 +10,11 @@ This packet draws a left-bank levee, fixed toe scour/apron protection, and terra
 
 Use this Civil 3D import packet:
 
-- `output/LeveeOnly.LeftBank.v012.civil3d.pkt`
+- `output/LeveeOnly.LeftBank.v013.civil3d.pkt`
 
 Source packet:
 
-- `output/LeveeOnly.LeftBank.v012.source.pkt`
+- `output/LeveeOnly.LeftBank.v013.source.pkt`
 
 ## Required Targets
 
@@ -28,10 +28,10 @@ The origin is the wadi-side crown edge. Set the corridor/profile elevation there
 - Levee crown, landward daylight slope, and wadi-side daylight slope.
 - Fixed cyan scour protection from the wadi-side toe.
 - Fixed cyan apron after the toe scour segment toward thalweg.
-- Yellow existing-ground surface strips between protection zones.
-- Cyan protection strips at accepted concave breaks.
-- Cyan merge strips when protection runs are close enough to merge.
-- Large visible concave and convex break marker diamonds.
+- Yellow existing-ground surface-snapped links between protection zones.
+- Cyan surface-snapped protection links at accepted concave breaks.
+- Cyan merge links when protection runs are close enough to merge.
+- Large visible concave and convex break marker diamonds at computed trend intersections.
 
 Auxiliary 1 m sample points are calculation helpers only and have no display codes.
 
@@ -59,7 +59,7 @@ Map these codes in your Civil 3D Code Set Style:
 
 | Code | Recommended color | Meaning |
 |---|---|---|
-| `SurfaceYellow` | Yellow | Existing-ground strips where no protection is placed. |
+| `SurfaceYellow` | Yellow | Existing-ground links where no protection is placed. |
 | `ProtectionCyan` | Cyan | All protection geometry. |
 | `ToeScourProtection` | Cyan | Fixed toe scour protection. |
 | `ToeApronProtection` | Cyan | Fixed bed apron protection. |

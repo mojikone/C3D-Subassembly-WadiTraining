@@ -73,3 +73,13 @@ Generated Civil 3D-ready packet:
 - keeps convex break markers visible for logic checking
 - keeps auxiliary sample points uncoded so they are not styled as output points
 - skips adaptive concave protection inside the fixed toe scour/apron zone
+
+## v013 Packet
+
+Generated Civil 3D-ready packet:
+- `output/LeveeOnly.LeftBank.v013.civil3d.pkt`
+- places concave and convex markers at computed trend-line intersections instead of raw sample points
+- prevents active concave candidates from being overwritten before `MinMildTrendLength` is reached
+- advances the trend reference when a real break is skipped inside the fixed toe/apron zone
+- replaces shifted `StripSurfaceActivity` output with surface-snapped points and normal visible links
+- puts custom display codes first: `ProtectionCyan` and `SurfaceYellow`

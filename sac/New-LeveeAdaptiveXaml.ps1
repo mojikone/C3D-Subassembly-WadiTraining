@@ -195,16 +195,28 @@ function CreateStripSurface {
         [string[]]$EndPointCodes = @()
     )
     $id = $script:activityId++
+    $startOffsetExpr = ToStripSurfaceOffset $StartOffset
+    $endOffsetExpr = ToStripSurfaceOffset $EndOffset
     $linkCodesXml = CodesList "asa2:StripSurfaceActivity.LinkCodes" $LinkCodes
     $startCodesXml = CodesList "asa2:StripSurfaceActivity.StartPointCodes" $StartPointCodes
     $endCodesXml = CodesList "asa2:StripSurfaceActivity.EndPointCodes" $EndPointCodes
     return @"
-        <asa2:StripSurfaceActivity EndOffsetTarget="{x:Null}" StartOffsetTarget="{x:Null}" ActivityId="$id" Depth="0" DepthForLayoutMode="[-P3.Y]" DisplayName="$(Escape-XamlText $Display)" EndOffset="$(Expr $EndOffset)" EndPointName="$(Escape-XamlText $EndPoint)" Geometry="[Geometry]" LinkNumber="$(Escape-XamlText $Name)" ShowErrors="True" Side="[Side]" StartOffset="$(Expr $StartOffset)" StartPointName="$(Escape-XamlText $StartPoint)" SubassemblyErrorCenter="[SubassemblyErrorCenter]" SubassemblyRunMode="[SubassemblyRunMode]" Surface="[ExistingGround]">
+        <asa2:StripSurfaceActivity EndOffsetTarget="{x:Null}" StartOffsetTarget="{x:Null}" ActivityId="$id" Depth="0" DepthForLayoutMode="[-P3.Y]" DisplayName="$(Escape-XamlText $Display)" EndOffset="$(Expr $endOffsetExpr)" EndPointName="$(Escape-XamlText $EndPoint)" Geometry="[Geometry]" LinkNumber="$(Escape-XamlText $Name)" ShowErrors="True" Side="[Side]" StartOffset="$(Expr $startOffsetExpr)" StartPointName="$(Escape-XamlText $StartPoint)" SubassemblyErrorCenter="[SubassemblyErrorCenter]" SubassemblyRunMode="[SubassemblyRunMode]" Surface="[ExistingGround]">
 $linkCodesXml
 $startCodesXml
 $endCodesXml
         </asa2:StripSurfaceActivity>
 "@
+}
+
+function ToStripSurfaceOffset {
+    param([string]$Offset)
+    $text = $Offset.Trim()
+    if ($text.StartsWith("[") -and $text.EndsWith("]")) {
+        $inner = $text.Substring(1, $text.Length - 2)
+        return "[$inner + P3.X]"
+    }
+    return "[$text + P3.X]"
 }
 
 function CreateBreakMarkerActivities {
@@ -320,11 +332,12 @@ function BuildCandidateProtectionNode {
     param([int]$I, [string]$CurrentPoint, [string]$Next)
     $steepHorizontal = "Math.Min(Math.Max(CandidateSteepLength, 0), MaxSteepProtectionLength / Math.Sqrt(1 + CandidateSteepSlope * CandidateSteepSlope))"
     $protStartX = "(CandidateX - ($steepHorizontal))"
+    $intersectionX = "Math.Min(Math.Max((((CandidateMildStartY - MildTrendSlope * CandidateMildStartX) - (RefY - CandidateSteepSlope * RefX)) / (CandidateSteepSlope - MildTrendSlope)), CandidateSteepEndX), CandidateMildStartX)"
     $mergeCondition = "HasProtection = 1 AndAlso (ProtectionStartX - LastProtectionEndX) <= MergeDistance"
 
     $afterMerge = ChainSteps @(
-        (CreateStripSurface "PRS$I" "[ProtectionStartX]" "[CandidateX]" "PS$I" "PCS$I" "PRS$I steep protection surface" @("Top", "Protection", "ProtectionCyan", "ProtectionSteep") @("ProtectionStart", "ProtectionCyan") @("ProtectionBreak", "ProtectionCyan")),
-        (CreateStripSurface "PRM$I" "[CandidateX]" "[ProtectionEndX]" "PCM$I" "PM$I" "PRM$I mild protection surface" @("Top", "Protection", "ProtectionCyan", "ProtectionMild") @("ProtectionBreak", "ProtectionCyan") @("ProtectionEnd", "ProtectionCyan")),
+        (CreateLink "PRS$I" "PS$I" "CC$I" "PRS$I steep protection" @("ProtectionCyan", "Protection", "ProtectionSteep")),
+        (CreateLink "PRM$I" "CC$I" "PM$I" "PRM$I mild protection" @("ProtectionCyan", "Protection", "ProtectionMild")),
         (AssignVar "x:Int32" "HasProtection" "1" "HasProtection = 1"),
         (AssignVar "x:Double" "LastProtectionStartX" "[If(LastProtectionEndX > 0 AndAlso (ProtectionStartX - LastProtectionEndX) <= MergeDistance, LastProtectionStartX, ProtectionStartX)]" "LastProtectionStartX = merged/start"),
         (AssignVar "x:Double" "LastProtectionEndX" "[ProtectionEndX]" "LastProtectionEndX = PM$I"),
@@ -336,18 +349,27 @@ function BuildCandidateProtectionNode {
         (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 after protection")
     ) $Next
     $mergeGap = AddFlowDecision "ProtectionStartX - LastProtectionEndX > 0.001" (ChainSteps @(
-        (CreateStripSurface "MG$I" "[LastProtectionEndX]" "[ProtectionStartX]" "MGS$I" "MGE$I" "MG$I merged protection surface" @("Top", "Protection", "ProtectionCyan", "ProtectionMerge") @("ProtectionCyan") @("ProtectionCyan"))
+        (CreatePointDeltaXOnSurface "MGS$I" "P3" "[LastProtectionEndX - P3.X]" "MGS$I merge start on surface" @("ProtectionCyan") $false),
+        (CreatePointDeltaXOnSurface "MGE$I" "P3" "[ProtectionStartX - P3.X]" "MGE$I merge end on surface" @("ProtectionCyan") $false),
+        (CreateLink "MG$I" "MGS$I" "MGE$I" "MG$I merged protection" @("ProtectionCyan", "Protection", "ProtectionMerge"))
     ) $afterMerge) $afterMerge
     $surfaceGap = AddFlowDecision "ProtectionStartX - SurfaceRunStartX > 0.001" (ChainSteps @(
-        (CreateStripSurface "SF$I" "[SurfaceRunStartX]" "[ProtectionStartX]" "SFS$I" "SFE$I" "SF$I ground surface" @("Top", "ExistingGround", "SurfaceYellow") @("SurfaceYellow") @("SurfaceYellow"))
+        (CreatePointDeltaXOnSurface "SFS$I" "P3" "[SurfaceRunStartX - P3.X]" "SFS$I surface start" @("SurfaceYellow") $false),
+        (CreatePointDeltaXOnSurface "SFE$I" "P3" "[ProtectionStartX - P3.X]" "SFE$I surface end" @("SurfaceYellow") $false),
+        (CreateLink "SF$I" "SFS$I" "SFE$I" "SF$I ground surface" @("SurfaceYellow", "ExistingGround"))
     ) $afterMerge) $afterMerge
     $preProtectionNode = AddFlowDecision $mergeCondition $mergeGap $surfaceGap
 
-    $markerActivities = CreateBreakMarkerActivities "CCM$I" "CC$I" @("BreakMarker", "ConcaveBreakMarker", "ProtectionCyan")
+    $markerActivities = CreateBreakMarkerActivities "CCM$I" "CC$I" @("ConcaveBreakMarker", "ProtectionCyan", "BreakMarker")
     return ChainSteps (@(
+        (AssignVar "x:Double" "CandidateX" "[$intersectionX]" "CandidateX = trend intersection $I"),
+        (AssignVar "x:Double" "CandidateY" "[RefY + CandidateSteepSlope * (CandidateX - RefX)]" "CandidateY = trend intersection $I"),
+        (AssignVar "x:Double" "CandidateSteepLength" "[CandidateX - RefX]" "CandidateSteepLength = intersection"),
         (AssignVar "x:Double" "ProtectionStartX" "[$protStartX]" "ProtectionStartX = $I"),
         (AssignVar "x:Double" "ProtectionEndX" "[CandidateX + MildProtectionLength]" "ProtectionEndX = $I"),
-        (CreatePointDeltaXOnSurface "CC$I" $CurrentPoint "[CandidateX - $CurrentPoint.X]" "CC$I confirmed concave break on surface" @("ConcaveBreak", "ProtectionBreak", "ProtectionCyan") $true)
+        (CreatePointDeltaXOnSurface "CC$I" $CurrentPoint "[CandidateX - $CurrentPoint.X]" "CC$I confirmed concave trend intersection on surface" @("ProtectionCyan", "ConcaveBreak", "ProtectionBreak") $true),
+        (CreatePointDeltaXOnSurface "PS$I" "CC$I" "[ProtectionStartX - CandidateX]" "PS$I protection start on surface" @("ProtectionCyan", "ProtectionStart") $false),
+        (CreatePointDeltaXOnSurface "PM$I" "CC$I" "[ProtectionEndX - CandidateX]" "PM$I protection end on surface" @("ProtectionCyan", "ProtectionEnd") $false)
     ) + $markerActivities) $preProtectionNode
 }
 
@@ -366,28 +388,42 @@ function BuildSampleNode {
         ) $Next
     } else {
         $breakPoint = "AP$($I - 1)"
+        $trendEnd = if ($I -eq 2) { "P3" } else { "AP$($I - 2)" }
         $afterCandidate = ChainSteps @(
             (AssignVar "x:Int32" "CandidateActive" "1" "CandidateActive = 1"),
             (AssignVar "x:Double" "CandidateX" "[$breakPoint.X]" "CandidateX = $breakPoint"),
             (AssignVar "x:Double" "CandidateY" "[$breakPoint.Y]" "CandidateY = $breakPoint"),
+            (AssignVar "x:Double" "CandidateSteepEndX" "[$breakPoint.X]" "CandidateSteepEndX = $breakPoint"),
+            (AssignVar "x:Double" "CandidateSteepEndY" "[$breakPoint.Y]" "CandidateSteepEndY = $breakPoint"),
+            (AssignVar "x:Double" "CandidateMildStartX" "[$ap.X]" "CandidateMildStartX = $ap"),
+            (AssignVar "x:Double" "CandidateMildStartY" "[$ap.Y]" "CandidateMildStartY = $ap"),
             (AssignVar "x:Double" "CandidateSteepSlope" "[PrevSlope]" "CandidateSteepSlope = PrevSlope"),
             (AssignVar "x:Double" "CandidateMildSlope" "[LocalSlope]" "CandidateMildSlope = LocalSlope"),
             (AssignVar "x:Double" "CandidateSteepLength" "[$breakPoint.X - RefX]" "CandidateSteepLength = $breakPoint - Ref"),
-            (AssignVar "x:Double" "PrevSlope" "[CurrSlope]" "PrevSlope = CurrSlope after candidate"),
             (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 after candidate")
         ) $Next
-        $afterBreak = ChainSteps @(
-            (AssignVar "x:Double" "RefX" "[$breakPoint.X]" "RefX = $breakPoint"),
-            (AssignVar "x:Double" "RefY" "[$breakPoint.Y]" "RefY = $breakPoint"),
-            (AssignVar "x:Double" "PrevSlope" "[LocalSlope]" "PrevSlope = LocalSlope after break"),
-            (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 after break")
+        $ignoredBreakUpdate = ChainSteps @(
+            (AssignVar "x:Double" "RefX" "[$breakPoint.X]" "RefX = ignored break"),
+            (AssignVar "x:Double" "RefY" "[$breakPoint.Y]" "RefY = ignored break"),
+            (AssignVar "x:Double" "PrevSlope" "[LocalSlope]" "PrevSlope = ignored break"),
+            (AssignVar "x:Int32" "CandidateActive" "0" "CandidateActive = 0 ignored break"),
+            (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 ignored break")
         ) $Next
+        $convexRawX = "(((($ap.Y - LocalSlope * $ap.X) - (RefY - ConvexBeforeSlope * RefX)) / (ConvexBeforeSlope - LocalSlope)))"
+        $afterBreak = ChainSteps (@(
+            (AssignVar "x:Double" "ConvexBeforeSlope" "[If(Math.Abs($trendEnd.X - RefX) < 0.000001, PrevSlope, ($trendEnd.Y - RefY) / ($trendEnd.X - RefX))]" "ConvexBeforeSlope $I"),
+            (AssignVar "x:Double" "ConvexX" "[If(Math.Abs(ConvexBeforeSlope - LocalSlope) < 0.000001, $breakPoint.X, Math.Min(Math.Max($convexRawX, $trendEnd.X), $ap.X))]" "ConvexX = trend intersection $I"),
+            (AssignVar "x:Double" "ConvexY" "[RefY + ConvexBeforeSlope * (ConvexX - RefX)]" "ConvexY = trend intersection $I"),
+            (CreatePointDeltaXOnSurface "CV$I" $ap "[ConvexX - $ap.X]" "CV$I ignored convex trend intersection" @("ConvexBreakMarker", "ConvexBreak", "IgnoredBreak") $true)
+        ) + (CreateBreakMarkerActivities "CVM$I" "CV$I" @("ConvexBreakMarker", "IgnoredBreak", "BreakMarker")) + @(
+            (AssignVar "x:Double" "RefX" "[ConvexX]" "RefX = convex intersection"),
+            (AssignVar "x:Double" "RefY" "[ConvexY]" "RefY = convex intersection"),
+            (AssignVar "x:Double" "PrevSlope" "[LocalSlope]" "PrevSlope = LocalSlope after break"),
+            (AssignVar "x:Int32" "CandidateActive" "0" "CandidateActive = 0 after convex"),
+            (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 after break")
+        )) $Next
         $convexCondition = "LocalSlope < PrevSlope AndAlso Math.Abs(LocalSlope) > Math.Abs(PrevSlope)"
-        $convexMarkerActivities = @(
-            (CreatePointDelta "CV$I" $breakPoint "0" "0" "CV$I ignored convex break" @("ConvexBreak", "IgnoredBreak", "ConvexMarker"))
-        ) + (CreateBreakMarkerActivities "CVM$I" "CV$I" @("BreakMarker", "ConvexBreakMarker", "IgnoredBreak"))
-        $convexNode = ChainSteps $convexMarkerActivities $afterBreak
-        $afterProtection = AddFlowDecision $convexCondition $convexNode $afterBreak
+        $afterProtection = AddFlowDecision $convexCondition $afterBreak $ignoredBreakUpdate
         $candidateCondition = "PrevSlope < LocalSlope AndAlso Math.Abs(PrevSlope) > Math.Abs(LocalSlope) AndAlso ($breakPoint.X - RefX) >= MinSteepLength AndAlso $breakPoint.X >= FixedToeProtectionEndX"
         $protectNode = AddFlowDecision $candidateCondition $afterCandidate $afterProtection
         $noBreak = ChainSteps @(
@@ -396,14 +432,24 @@ function BuildSampleNode {
         ) $Next
         $breakCondition = "HavePrevSlope = 1 AndAlso Math.Abs(CurrSlope - PrevSlope) >= SlopeChangeThreshold * Math.Max(Math.Abs(PrevSlope), 0.001)"
         $breakDecision = AddFlowDecision $breakCondition $protectNode $noBreak
-        $confirmCondition = "CandidateActive = 1 AndAlso CandidateX >= FixedToeProtectionEndX AndAlso ($ap.X - CandidateX) >= MinMildTrendLength AndAlso CandidateSteepSlope < MildTrendSlope AndAlso Math.Abs(CandidateSteepSlope) > Math.Abs(MildTrendSlope) AndAlso CandidateSteepLength >= MinSteepLength AndAlso CandidateX + MildProtectionLength <= ScanLimitX"
-        $confirmDecision = AddFlowDecision $confirmCondition (BuildCandidateProtectionNode $I $ap $Next) $breakDecision
+        $candidateReject = ChainSteps @(
+            (AssignVar "x:Int32" "CandidateActive" "0" "CandidateActive = 0 rejected"),
+            (AssignVar "x:Double" "RefX" "[CandidateMildStartX]" "RefX = rejected mild start"),
+            (AssignVar "x:Double" "RefY" "[CandidateMildStartY]" "RefY = rejected mild start"),
+            (AssignVar "x:Double" "PrevSlope" "[MildTrendSlope]" "PrevSlope = rejected candidate"),
+            (AssignVar "x:Int32" "HavePrevSlope" "1" "HavePrevSlope = 1 rejected")
+        ) $Next
+        $mildIsValid = "CandidateSteepSlope < MildTrendSlope AndAlso Math.Abs(CandidateSteepSlope) > Math.Abs(MildTrendSlope)"
+        $rejectCondition = "($ap.X - CandidateMildStartX) >= MinMildTrendLength AndAlso Not($mildIsValid)"
+        $candidateWait = AddFlowDecision $rejectCondition $candidateReject $Next
+        $confirmCondition = "CandidateActive = 1 AndAlso ($ap.X - CandidateMildStartX) >= MinMildTrendLength AndAlso $mildIsValid AndAlso CandidateSteepLength >= MinSteepLength AndAlso CandidateMildStartX + MildProtectionLength <= ScanLimitX AndAlso Math.Abs(CandidateSteepSlope - MildTrendSlope) > 0.000001"
+        $confirmDecision = AddFlowDecision "CandidateActive = 1" (AddFlowDecision $confirmCondition (BuildCandidateProtectionNode $I $ap $Next) $candidateWait) $breakDecision
         $sampleChain = ChainSteps @(
             (CreateAuxDeltaXOnSurface $ap $prev "[SampleInterval]" "$ap 1m ground sample"),
             (AssignVar "x:Double" "LastSampleX" "[$ap.X]" "LastSampleX = $ap"),
             (AssignVar "x:Double" "CurrSlope" "[If(Math.Abs($ap.X - RefX) < 0.000001, 0, ($ap.Y - RefY) / ($ap.X - RefX))]" "CurrSlope $ap"),
             (AssignVar "x:Double" "LocalSlope" "[If(Math.Abs($ap.X - $breakPoint.X) < 0.000001, 0, ($ap.Y - $breakPoint.Y) / ($ap.X - $breakPoint.X))]" "LocalSlope $breakPoint to $ap"),
-            (AssignVar "x:Double" "MildTrendSlope" "[If(CandidateActive = 1 AndAlso Math.Abs($ap.X - CandidateX) >= 0.000001, ($ap.Y - CandidateY) / ($ap.X - CandidateX), LocalSlope)]" "MildTrendSlope $ap")
+            (AssignVar "x:Double" "MildTrendSlope" "[If(CandidateActive = 1 AndAlso Math.Abs($ap.X - CandidateMildStartX) >= 0.000001, ($ap.Y - CandidateMildStartY) / ($ap.X - CandidateMildStartX), LocalSlope)]" "MildTrendSlope $ap")
         ) $confirmDecision
     }
     $scanCondition = "P3.X + ($I * SampleInterval) <= ScanLimitX"
@@ -411,7 +457,9 @@ function BuildSampleNode {
 }
 
 $finishNode = AddFlowDecision "ScanLimitX - SurfaceRunStartX > 0.001" (ChainSteps @(
-    (CreateStripSurface "SF_Final" "[SurfaceRunStartX]" "[ScanLimitX]" "SFFS" "SFFE" "SF final ground surface" @("Top", "ExistingGround", "SurfaceYellow") @("SurfaceYellow") @("SurfaceYellow"))
+    (CreatePointDeltaXOnSurface "SFFS" "P3" "[SurfaceRunStartX - P3.X]" "SFFS final surface start" @("SurfaceYellow") $false),
+    (CreatePointDeltaXOnSurface "SFFE" "P3" "[ScanLimitX - P3.X]" "SFFE final surface end" @("SurfaceYellow") $false),
+    (CreateLink "SF_Final" "SFFS" "SFFE" "SF final ground surface" @("SurfaceYellow", "ExistingGround"))
 )) ""
 
 $sampleNode = $finishNode
@@ -427,8 +475,10 @@ $flowStartNode = ChainSteps @(
     (AssignVar "x:Double" "ScanLimitX" "[If(ThalwegOffset.IsValid, ThalwegOffset.Offset, P3.X + MaxScanDistance)]" "ScanLimitX"),
     (AssignVar "x:Double" "ToeScourEndX" "[Math.Min(P3.X + ToeScourLength, ScanLimitX)]" "ToeScourEndX"),
     (AssignVar "x:Double" "FixedToeProtectionEndX" "[Math.Min(P3.X + ToeScourLength + ToeApronLength, ScanLimitX)]" "FixedToeProtectionEndX"),
-    (CreateStripSurface "TSC" "[P3.X]" "[ToeScourEndX]" "TSCS" "TSCE" "TSC toe scour protection" @("Top", "Protection", "ProtectionCyan", "ToeScourProtection") @("WadiToe", "ProtectionCyan") @("ToeScourEnd", "ProtectionCyan")),
-    (CreateStripSurface "TAP" "[ToeScourEndX]" "[FixedToeProtectionEndX]" "TAPS" "TAPE" "TAP toe apron protection" @("Top", "Protection", "ProtectionCyan", "ToeApronProtection") @("ToeScourEnd", "ProtectionCyan") @("ToeApronEnd", "ProtectionCyan")),
+    (CreatePointDeltaXOnSurface "TSCE" "P3" "[ToeScourEndX - P3.X]" "TSCE toe scour end" @("ProtectionCyan", "ToeScourEnd") $false),
+    (CreateLink "TSC" "P3" "TSCE" "TSC toe scour protection" @("ProtectionCyan", "Protection", "ToeScourProtection")),
+    (CreatePointDeltaXOnSurface "TAPE" "P3" "[FixedToeProtectionEndX - P3.X]" "TAPE toe apron end" @("ProtectionCyan", "ToeApronEnd") $false),
+    (CreateLink "TAP" "TSCE" "TAPE" "TAP toe apron protection" @("ProtectionCyan", "Protection", "ToeApronProtection")),
     (AssignVar "x:Double" "SurfaceRunStartX" "[FixedToeProtectionEndX]" "SurfaceRunStartX = fixed toe protection end"),
     (AssignVar "x:Double" "LastSampleX" "[P3.X]" "LastSampleX = P3"),
     (AssignVar "x:Double" "RefX" "[P3.X]" "RefX = P3"),
@@ -443,10 +493,17 @@ $flowStartNode = ChainSteps @(
     (AssignVar "x:Int32" "CandidateActive" "0" "CandidateActive = 0"),
     (AssignVar "x:Double" "CandidateX" "0" "CandidateX = 0"),
     (AssignVar "x:Double" "CandidateY" "0" "CandidateY = 0"),
+    (AssignVar "x:Double" "CandidateSteepEndX" "0" "CandidateSteepEndX = 0"),
+    (AssignVar "x:Double" "CandidateSteepEndY" "0" "CandidateSteepEndY = 0"),
+    (AssignVar "x:Double" "CandidateMildStartX" "0" "CandidateMildStartX = 0"),
+    (AssignVar "x:Double" "CandidateMildStartY" "0" "CandidateMildStartY = 0"),
     (AssignVar "x:Double" "CandidateSteepSlope" "0" "CandidateSteepSlope = 0"),
     (AssignVar "x:Double" "CandidateMildSlope" "0" "CandidateMildSlope = 0"),
     (AssignVar "x:Double" "CandidateSteepLength" "0" "CandidateSteepLength = 0"),
-    (AssignVar "x:Double" "MildTrendSlope" "0" "MildTrendSlope = 0")
+    (AssignVar "x:Double" "MildTrendSlope" "0" "MildTrendSlope = 0"),
+    (AssignVar "x:Double" "ConvexBeforeSlope" "0" "ConvexBeforeSlope = 0"),
+    (AssignVar "x:Double" "ConvexX" "0" "ConvexX = 0"),
+    (AssignVar "x:Double" "ConvexY" "0" "ConvexY = 0")
 ) $sampleNode
 
 $flowNodesText = $flowNodes -join "`r`n"
@@ -541,10 +598,17 @@ $xaml = @"
       <Variable x:TypeArguments="x:Int32" Name="CandidateActive" />
       <Variable x:TypeArguments="x:Double" Name="CandidateX" />
       <Variable x:TypeArguments="x:Double" Name="CandidateY" />
+      <Variable x:TypeArguments="x:Double" Name="CandidateSteepEndX" />
+      <Variable x:TypeArguments="x:Double" Name="CandidateSteepEndY" />
+      <Variable x:TypeArguments="x:Double" Name="CandidateMildStartX" />
+      <Variable x:TypeArguments="x:Double" Name="CandidateMildStartY" />
       <Variable x:TypeArguments="x:Double" Name="CandidateSteepSlope" />
       <Variable x:TypeArguments="x:Double" Name="CandidateMildSlope" />
       <Variable x:TypeArguments="x:Double" Name="CandidateSteepLength" />
       <Variable x:TypeArguments="x:Double" Name="MildTrendSlope" />
+      <Variable x:TypeArguments="x:Double" Name="ConvexBeforeSlope" />
+      <Variable x:TypeArguments="x:Double" Name="ConvexX" />
+      <Variable x:TypeArguments="x:Double" Name="ConvexY" />
       <Variable x:TypeArguments="asw:EnumType" Default="[new EnumType(1, &quot;Left&quot;)]" Modifiers="ReadOnly" Name="Left" />
       <Variable x:TypeArguments="asw:EnumType" Default="[new EnumType(11, &quot;No&quot;)]" Modifiers="ReadOnly" Name="No" />
       <Variable x:TypeArguments="asw:EnumType" Default="[new EnumType(-1, &quot;None&quot;)]" Modifiers="ReadOnly" Name="None" />
