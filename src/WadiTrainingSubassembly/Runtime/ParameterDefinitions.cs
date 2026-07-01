@@ -33,7 +33,7 @@ internal static class ParameterDefinitions
 
     private static void RegisterCommonInputParameters(CorridorState state)
     {
-        state.ParamsString.Add(ParameterNames.Version, "W2.2");
+        state.ParamsString.Add(ParameterNames.Version, "W2.3");
         state.ParamsDouble.Add(ParameterNames.CrownWidth, 4.0);
         state.ParamsDouble.Add(ParameterNames.LeveeSideSlope, 0.5);
         state.ParamsDouble.Add(ParameterNames.MaxScanDistance, 250.0);
@@ -41,7 +41,7 @@ internal static class ParameterDefinitions
         state.ParamsDouble.Add(ParameterNames.TrendWindowLength, 5.0);
         state.ParamsDouble.Add(ParameterNames.MinMildTrendLength, 5.0);
         state.ParamsDouble.Add(ParameterNames.MinSteepTrendLength, 0.6);
-        state.ParamsDouble.Add(ParameterNames.SlopeChangeThreshold, 0.20);
+        state.ParamsDouble.Add(ParameterNames.SlopeChangeThreshold, 0.10);
         state.ParamsDouble.Add(ParameterNames.MaxTrendResidual, 0.25);
         state.ParamsDouble.Add(ParameterNames.MinBreakSpacing, 5.0);
         state.ParamsDouble.Add(ParameterNames.MildProtectionLength, 2.0);

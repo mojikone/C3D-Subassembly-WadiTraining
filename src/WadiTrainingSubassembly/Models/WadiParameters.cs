@@ -4,7 +4,7 @@ namespace WadiTraining.Models;
 
 internal sealed class WadiParameters
 {
-    public string Version { get; init; } = "W2.2";
+    public string Version { get; init; } = "W2.3";
     public BankMode BankMode { get; init; } = BankMode.Right;
     public double CrownWidth { get; init; } = 4.0;
     public double LeveeSideSlope { get; init; } = 0.5;
@@ -13,7 +13,7 @@ internal sealed class WadiParameters
     public double TrendWindowLength { get; init; } = 5.0;
     public double MinMildTrendLength { get; init; } = 5.0;
     public double MinSteepTrendLength { get; init; } = 0.6;
-    public double SlopeChangeThreshold { get; init; } = 0.20;
+    public double SlopeChangeThreshold { get; init; } = 0.10;
     public double MaxTrendResidual { get; init; } = 0.25;
     public double MinBreakSpacing { get; init; } = 5.0;
     public double MildProtectionLength { get; init; } = 2.0;
@@ -28,7 +28,7 @@ internal sealed class WadiParameters
     {
         return new WadiParameters
         {
-            Version = runtime.GetString(ParameterNames.Version, "W2.2"),
+            Version = runtime.GetString(ParameterNames.Version, "W2.3"),
             BankMode = forcedBankMode ?? ResolveBankMode(runtime),
             CrownWidth = ClampPositive(runtime.GetDouble(ParameterNames.CrownWidth, 4.0), 0.1),
             LeveeSideSlope = ClampPositive(runtime.GetDouble(ParameterNames.LeveeSideSlope, 0.5), 0.01),
@@ -37,7 +37,7 @@ internal sealed class WadiParameters
             TrendWindowLength = ClampPositive(runtime.GetDouble(ParameterNames.TrendWindowLength, 5.0), 0.5),
             MinMildTrendLength = ClampPositive(runtime.GetDouble(ParameterNames.MinMildTrendLength, 5.0), 0.5),
             MinSteepTrendLength = ClampPositive(runtime.GetDouble(ParameterNames.MinSteepTrendLength, 0.6), 0.1),
-            SlopeChangeThreshold = Math.Max(0.0, runtime.GetDouble(ParameterNames.SlopeChangeThreshold, 0.20)),
+            SlopeChangeThreshold = Math.Max(0.0, runtime.GetDouble(ParameterNames.SlopeChangeThreshold, 0.10)),
             MaxTrendResidual = ClampPositive(runtime.GetDouble(ParameterNames.MaxTrendResidual, 0.25), 0.01),
             MinBreakSpacing = ClampPositive(runtime.GetDouble(ParameterNames.MinBreakSpacing, 5.0), 0.1),
             MildProtectionLength = ClampPositive(runtime.GetDouble(ParameterNames.MildProtectionLength, 2.0), 0.1),

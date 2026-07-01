@@ -14,6 +14,7 @@ Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection
 - Draws continuous ground-following links:
   - `WT_Surface`: unprotected surface links.
   - `WT_Protection`, `WT_ToeScour`, `WT_ToeApron`: protection links.
+- Colors/linetypes are controlled by the Civil 3D Code Set Style; map the `WT_*` codes there.
 
 ## Attach In Civil 3D
 
@@ -41,7 +42,7 @@ Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection
 - `Trend Window Length`: length used on each side to fit trend lines.
 - `Min Mild Trend Length`: minimum mild trend length needed to accept a break.
 - `Min Steep Trend Length`: minimum steep trend length needed to accept a break.
-- `Slope Change Threshold`: dimensionless ratio; `0.20` means 20 percent.
+- `Slope Change Threshold`: dimensionless grade difference; `0.10` means 10 percent.
 - `Max Trend Residual`: maximum RMS vertical error for fitted trend lines.
 - `Min Break Spacing`: suppresses duplicate same-kind break markers.
 - `Mild Protection Length`: protected length on mild side of concave break.

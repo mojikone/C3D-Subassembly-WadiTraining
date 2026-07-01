@@ -22,7 +22,7 @@ New-Item -ItemType Directory -Force -Path $staging | Out-Null
 Copy-Item -LiteralPath $dllSource -Destination $dllTarget -Force
 
 $commonParams = @'
-            <Version DataType="String" DisplayName="Version" Description="Internal package version.">W2.2</Version>
+            <Version DataType="String" DisplayName="Version" Description="Internal package version.">W2.3</Version>
             <CrownWidth DataType="Double" TypeInfo="16" DisplayName="Crown Width" Description="Horizontal crown width.">4.0</CrownWidth>
             <LeveeSideSlope DataType="Double" TypeInfo="10" DisplayName="Levee Side Slope" Description="Side slope as vertical over horizontal grade; 0.5 means 1V:2H.">0.5</LeveeSideSlope>
             <MaxScanDistance DataType="Double" TypeInfo="16" DisplayName="Max Scan Distance" Description="Maximum ground scan distance when scan limit target is not assigned.">250.0</MaxScanDistance>
@@ -30,7 +30,7 @@ $commonParams = @'
             <TrendWindowLength DataType="Double" TypeInfo="16" DisplayName="Trend Window Length" Description="Length on each side used to fit slope trend lines.">5.0</TrendWindowLength>
             <MinMildTrendLength DataType="Double" TypeInfo="16" DisplayName="Min Mild Trend Length" Description="Minimum fitted length of the milder surface before a break is accepted.">5.0</MinMildTrendLength>
             <MinSteepTrendLength DataType="Double" TypeInfo="16" DisplayName="Min Steep Trend Length" Description="Minimum fitted length of the steeper face before a break is accepted.">0.6</MinSteepTrendLength>
-            <SlopeChangeThreshold DataType="Double" DisplayName="Slope Change Threshold" Description="Minimum steep-to-mild ratio change. Use 0.20 for 20 percent.">0.20</SlopeChangeThreshold>
+            <SlopeChangeThreshold DataType="Double" DisplayName="Slope Change Threshold" Description="Minimum grade difference between adjacent trend lines. Use 0.10 for 10 percent.">0.10</SlopeChangeThreshold>
             <MaxTrendResidual DataType="Double" TypeInfo="16" DisplayName="Max Trend Residual" Description="Maximum RMS vertical fit error allowed for either trend line.">0.25</MaxTrendResidual>
             <MinBreakSpacing DataType="Double" TypeInfo="16" DisplayName="Min Break Spacing" Description="Suppresses duplicate same-kind break markers inside this spacing.">5.0</MinBreakSpacing>
             <MildProtectionLength DataType="Double" TypeInfo="16" DisplayName="Mild Protection Length" Description="Surface length to protect on the mild side of a concave break.">2.0</MildProtectionLength>
@@ -77,7 +77,7 @@ $xml = @"
           <Image cx="64" cy="64" />
         </Images>
         <Description>One-side levee. Baseline profile controls crown elevation; one optional offset target limits scan toward the wadi.</Description>
-        <ToolTip>Version: W2.2 One Side</ToolTip>
+        <ToolTip>Version: W2.3 One Side</ToolTip>
         <Keywords>_WadiTrainingLevee_OneSide_W2 subassembly levee scour protection wadi</Keywords>
         <Help>
           <HelpFile />
@@ -93,7 +93,7 @@ $xml = @"
           <GeometryGenerateMode>UseDotNet</GeometryGenerateMode>
           <ConditionalSubassembly>false</ConditionalSubassembly>
           <DotNetClass Assembly="WadiTrainingSubassembly.dll">Subassembly.WadiTrainingLeveeOneSide</DotNetClass>
-          <Version>W2.2</Version>
+          <Version>W2.3</Version>
           <Content DownloadLocation="" />
           <Params>
             <Side DataType="Long" TypeInfo="16" DisplayName="Side" Description="Which side of the baseline contains the wadi scan.">0
@@ -116,7 +116,7 @@ $commonParams
           <Image cx="64" cy="64" />
         </Images>
         <Description>Both-side levees from a centerline/thalweg baseline. Baseline profile controls both crown elevations; left and right crown offsets control locations.</Description>
-        <ToolTip>Version: W2.2 Both Sides</ToolTip>
+        <ToolTip>Version: W2.3 Both Sides</ToolTip>
         <Keywords>_WadiTrainingLevee_BothSides_W2 subassembly levee scour protection wadi</Keywords>
         <Help>
           <HelpFile />
@@ -132,7 +132,7 @@ $commonParams
           <GeometryGenerateMode>UseDotNet</GeometryGenerateMode>
           <ConditionalSubassembly>false</ConditionalSubassembly>
           <DotNetClass Assembly="WadiTrainingSubassembly.dll">Subassembly.WadiTrainingLeveeBothSides</DotNetClass>
-          <Version>W2.2</Version>
+          <Version>W2.3</Version>
           <Content DownloadLocation="" />
           <Params>
 $commonParams
