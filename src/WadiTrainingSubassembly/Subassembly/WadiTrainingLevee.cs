@@ -8,16 +8,16 @@ using WadiTraining.Terrain;
 
 namespace Subassembly;
 
-public sealed class WadiTrainingLevee : CivilSubassemblyBase
+public class WadiTrainingLeveeOneSide : CivilSubassemblyBase
 {
     protected override void RegisterLogicalNames(CorridorState state)
     {
-        ParameterDefinitions.RegisterLogicalNames(state);
+        ParameterDefinitions.RegisterOneSideLogicalNames(state);
     }
 
     protected override void RegisterInputParameters(CorridorState state)
     {
-        ParameterDefinitions.RegisterInputParameters(state);
+        ParameterDefinitions.RegisterOneSideInputParameters(state);
     }
 
     protected override void RegisterOutputParameters(CorridorState state)
@@ -32,43 +32,93 @@ public sealed class WadiTrainingLevee : CivilSubassemblyBase
 
         if (runtime.IsLayoutMode || !runtime.TryGetSurfaceTarget(TargetNames.ExistingGround, out var surfaceId))
         {
-            DrawLayout(runtime, parameters);
+            WadiTrainingLeveeCore.DrawLayout(runtime, parameters);
             return;
         }
 
         var sampler = new TerrainSampler(runtime, surfaceId);
-        if (parameters.BankMode == BankMode.Both)
+        var scanDirection = parameters.BankMode == BankMode.Left ? -1 : 1;
+        WadiTrainingLeveeCore.DrawOneBank(
+            runtime,
+            sampler,
+            parameters,
+            crownLocalOffset: 0.0,
+            scanDirection,
+            sampler.GetScanLimitLocalOffset());
+    }
+}
+
+public sealed class WadiTrainingLeveeBothSides : CivilSubassemblyBase
+{
+    protected override void RegisterLogicalNames(CorridorState state)
+    {
+        ParameterDefinitions.RegisterBothSidesLogicalNames(state);
+    }
+
+    protected override void RegisterInputParameters(CorridorState state)
+    {
+        ParameterDefinitions.RegisterBothSidesInputParameters(state);
+    }
+
+    protected override void RegisterOutputParameters(CorridorState state)
+    {
+        ParameterDefinitions.RegisterOutputParameters(state);
+    }
+
+    protected override void Draw(CorridorState state)
+    {
+        var runtime = new CivilRuntime(state);
+        var parameters = WadiParameters.From(runtime, BankMode.Both);
+
+        if (runtime.IsLayoutMode || !runtime.TryGetSurfaceTarget(TargetNames.ExistingGround, out var surfaceId))
         {
-            DrawBothBanks(runtime, sampler, parameters);
+            WadiTrainingLeveeCore.DrawLayout(runtime, parameters);
             return;
         }
 
-        var scanDirection = parameters.BankMode == BankMode.Left ? -1 : 1;
-        DrawOneBank(runtime, sampler, parameters, crownLocalOffset: 0.0, scanDirection, sampler.GetThalwegLocalOffset());
-    }
+        var sampler = new TerrainSampler(runtime, surfaceId);
+        var allBreaks = new List<BreakCandidate>();
 
-    private static void DrawBothBanks(CivilRuntime runtime, TerrainSampler sampler, WadiParameters parameters)
-    {
-        var thalweg = sampler.GetThalwegLocalOffset() ?? 0.0;
-
-        if (TryGetTargetLocalOffset(runtime, TargetNames.LeftBankCrownOffset, out var leftCrown))
+        if (WadiTrainingLeveeCore.TryGetTargetLocalOffset(runtime, TargetNames.LeftBankCrownOffset, out var leftCrown))
         {
-            DrawOneBank(runtime, sampler, parameters, leftCrown, scanDirection: 1, thalweg);
+            allBreaks.AddRange(WadiTrainingLeveeCore.DrawOneBank(
+                runtime,
+                sampler,
+                parameters,
+                leftCrown,
+                scanDirection: 1,
+                stopLocalOffset: 0.0));
         }
 
-        if (TryGetTargetLocalOffset(runtime, TargetNames.RightBankCrownOffset, out var rightCrown))
+        if (WadiTrainingLeveeCore.TryGetTargetLocalOffset(runtime, TargetNames.RightBankCrownOffset, out var rightCrown))
         {
-            DrawOneBank(runtime, sampler, parameters, rightCrown, scanDirection: -1, thalweg);
+            allBreaks.AddRange(WadiTrainingLeveeCore.DrawOneBank(
+                runtime,
+                sampler,
+                parameters,
+                rightCrown,
+                scanDirection: -1,
+                stopLocalOffset: 0.0));
         }
-    }
 
-    private static void DrawOneBank(
+        WadiTrainingLeveeCore.TrySetOutputCounts(runtime, allBreaks);
+    }
+}
+
+// Backward-compatible class name for older imported tools. New packets use the two explicit classes above.
+public sealed class WadiTrainingLevee : WadiTrainingLeveeOneSide
+{
+}
+
+internal static class WadiTrainingLeveeCore
+{
+    public static IReadOnlyList<BreakCandidate> DrawOneBank(
         CivilRuntime runtime,
         TerrainSampler sampler,
         WadiParameters parameters,
         double crownLocalOffset,
         int scanDirection,
-        double? thalwegLocalOffset)
+        double? stopLocalOffset)
     {
         var writer = new GeometryWriter(runtime, sampler);
         var detector = new TrendDetector();
@@ -83,24 +133,25 @@ public sealed class WadiTrainingLevee : CivilSubassemblyBase
         writer.DrawBankLevee(crownLocalOffset, scanDirection, parameters, wadiToe, landToe);
 
         var run = sampler.BuildRun(wadiToe.X, scanDirection, parameters.MaxScanDistance,
-            parameters.AnalysisSampleInterval, thalwegLocalOffset);
+            parameters.AnalysisSampleInterval, stopLocalOffset);
         var breaks = detector.Detect(run, parameters);
         var intervals = planner.BuildIntervals(run, breaks, parameters);
 
         writer.DrawTerrainRun(run, intervals, parameters);
         writer.DrawBreakMarkers(run, breaks, parameters);
-
         TrySetOutputCounts(runtime, breaks);
+
+        return breaks;
     }
 
-    private static void DrawLayout(CivilRuntime runtime, WadiParameters parameters)
+    public static void DrawLayout(CivilRuntime runtime, WadiParameters parameters)
     {
         var writer = new GeometryWriter(runtime, null);
         writer.DrawLayoutPreview(parameters);
         runtime.State.LayoutModeDisplayType = (CorridorLayoutModeDisplay)4;
     }
 
-    private static bool TryGetTargetLocalOffset(CivilRuntime runtime, string targetName, out double localOffset)
+    public static bool TryGetTargetLocalOffset(CivilRuntime runtime, string targetName, out double localOffset)
     {
         localOffset = 0.0;
         if (!runtime.TryGetOffsetTarget(targetName, out var target))
@@ -122,7 +173,7 @@ public sealed class WadiTrainingLevee : CivilSubassemblyBase
         }
     }
 
-    private static void TrySetOutputCounts(CivilRuntime runtime, IReadOnlyList<BreakCandidate> breaks)
+    public static void TrySetOutputCounts(CivilRuntime runtime, IReadOnlyList<BreakCandidate> breaks)
     {
         try
         {

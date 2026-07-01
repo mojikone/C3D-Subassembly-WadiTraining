@@ -116,9 +116,9 @@ internal sealed class TerrainSampler
         return new TerrainRun(direction, toeLocalOffset, stopLocalOffset, points);
     }
 
-    public double? GetThalwegLocalOffset()
+    public double? GetScanLimitLocalOffset()
     {
-        if (!_runtime.TryGetOffsetTarget(TargetNames.ThalwegOffset, out var target))
+        if (!_runtime.TryGetOffsetTarget(TargetNames.ScanLimitOffset, out var target))
         {
             return null;
         }

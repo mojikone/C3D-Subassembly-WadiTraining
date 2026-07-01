@@ -6,23 +6,34 @@ internal static class ParameterDefinitions
 {
     private const int LogicalOffsetTarget = 4;
     private const int LogicalSurfaceTarget = 1;
-    private const int LogicalElevationTarget = 5;
 
-    public static void RegisterLogicalNames(CorridorState state)
+    public static void RegisterOneSideLogicalNames(CorridorState state)
     {
         AddLogical(state, TargetNames.ExistingGround, LogicalSurfaceTarget, "Existing Ground Surface");
-        AddLogical(state, TargetNames.ThalwegOffset, LogicalOffsetTarget, "Thalweg Offset");
-        AddLogical(state, TargetNames.LeftBankCrownOffset, LogicalOffsetTarget, "Left Bank Crown Offset");
-        AddLogical(state, TargetNames.RightBankCrownOffset, LogicalOffsetTarget, "Right Bank Crown Offset");
-        AddLogical(state, TargetNames.LeftBankCrownElevation, LogicalElevationTarget, "Left Bank Crown Elevation");
-        AddLogical(state, TargetNames.RightBankCrownElevation, LogicalElevationTarget, "Right Bank Crown Elevation");
+        AddLogical(state, TargetNames.ScanLimitOffset, LogicalOffsetTarget, "Scan Limit Offset");
     }
 
-    public static void RegisterInputParameters(CorridorState state)
+    public static void RegisterBothSidesLogicalNames(CorridorState state)
     {
-        state.ParamsString.Add(ParameterNames.Version, "W2.1");
+        AddLogical(state, TargetNames.ExistingGround, LogicalSurfaceTarget, "Existing Ground Surface");
+        AddLogical(state, TargetNames.LeftBankCrownOffset, LogicalOffsetTarget, "Left Bank Crown Offset");
+        AddLogical(state, TargetNames.RightBankCrownOffset, LogicalOffsetTarget, "Right Bank Crown Offset");
+    }
+
+    public static void RegisterOneSideInputParameters(CorridorState state)
+    {
+        RegisterCommonInputParameters(state);
         state.ParamsLong.Add(ParameterNames.Side, -1);
-        state.ParamsLong.Add(ParameterNames.BankMode, 0);
+    }
+
+    public static void RegisterBothSidesInputParameters(CorridorState state)
+    {
+        RegisterCommonInputParameters(state);
+    }
+
+    private static void RegisterCommonInputParameters(CorridorState state)
+    {
+        state.ParamsString.Add(ParameterNames.Version, "W2.2");
         state.ParamsDouble.Add(ParameterNames.CrownWidth, 4.0);
         state.ParamsDouble.Add(ParameterNames.LeveeSideSlope, 0.5);
         state.ParamsDouble.Add(ParameterNames.MaxScanDistance, 250.0);

@@ -6,8 +6,8 @@ Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection
 
 - Draws levee crown, wadi-side face, and land-side face.
 - Finds the wadi-side toe by daylighting the levee slope to `ExistingGround`.
-- Draws toe scour and apron protection from the wadi-side toe toward the thalweg.
-- Scans existing ground toward `ThalwegOffset` if assigned, otherwise to `Max Scan Distance`.
+- Draws toe scour and apron protection from the wadi-side toe toward the wadi.
+- Scans existing ground toward the one-side scan limit, the centerline in both-side mode, or `Max Scan Distance`.
 - Fits terrain trend lines and marks their intersection as:
   - `WT_Concave`: concave break marker, protected.
   - `WT_Convex`: convex break marker, shown for debugging only.
@@ -20,20 +20,20 @@ Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection
 - The prompt `Select marker point within assembly or [Insert/Replace/Detached]` is normal.
 - Select the assembly marker point, or type `D` to place it detached for a quick layout test.
 
-## Required Target
+## Tools
 
-- `ExistingGround`: surface target.
+- `WadiTrainingLevee_OneSide_W2`: use when the baseline/profile is the levee crown control line.
+- `WadiTrainingLevee_BothSides_W2`: use when the baseline/profile is the centerline/thalweg control line.
 
-## Optional Targets
+## Targets
 
-- `ThalwegOffset`: offset target that stops one-side scanning.
-- `LeftBankCrownOffset`, `RightBankCrownOffset`: used only when `Bank Mode = Both`.
-- `LeftBankCrownElevation`, `RightBankCrownElevation`: reserved for later both-bank elevation targeting.
+- One-side: `ExistingGround` surface plus optional `ScanLimitOffset`.
+- Both-sides: `ExistingGround` surface plus `LeftBankCrownOffset` and `RightBankCrownOffset`.
+- No elevation/profile targets are used; the corridor baseline profile controls crown elevation.
 
 ## Main Parameters
 
-- `Side`: standard Civil 3D side selector for one-bank placement.
-- `Bank Mode`: Right, Left, or Both; `Both` is for centerline/thalweg mode.
+- `Side`: only in the one-side tool; selects left or right scan direction.
 - `Crown Width`: levee crown width.
 - `Levee Side Slope`: vertical/horizontal grade; `0.5` means 1V:2H.
 - `Max Scan Distance`: fallback scan length when thalweg is missing.

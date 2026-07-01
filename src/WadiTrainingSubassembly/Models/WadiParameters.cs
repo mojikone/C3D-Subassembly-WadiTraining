@@ -4,7 +4,7 @@ namespace WadiTraining.Models;
 
 internal sealed class WadiParameters
 {
-    public string Version { get; init; } = "W2.1";
+    public string Version { get; init; } = "W2.2";
     public BankMode BankMode { get; init; } = BankMode.Right;
     public double CrownWidth { get; init; } = 4.0;
     public double LeveeSideSlope { get; init; } = 0.5;
@@ -24,12 +24,12 @@ internal sealed class WadiParameters
     public double BreakMarkerSize { get; init; } = 0.5;
     public bool ShowConvexMarkers { get; init; } = true;
 
-    public static WadiParameters From(CivilRuntime runtime)
+    public static WadiParameters From(CivilRuntime runtime, BankMode? forcedBankMode = null)
     {
         return new WadiParameters
         {
-            Version = runtime.GetString(ParameterNames.Version, "W2.1"),
-            BankMode = ResolveBankMode(runtime),
+            Version = runtime.GetString(ParameterNames.Version, "W2.2"),
+            BankMode = forcedBankMode ?? ResolveBankMode(runtime),
             CrownWidth = ClampPositive(runtime.GetDouble(ParameterNames.CrownWidth, 4.0), 0.1),
             LeveeSideSlope = ClampPositive(runtime.GetDouble(ParameterNames.LeveeSideSlope, 0.5), 0.01),
             MaxScanDistance = ClampPositive(runtime.GetDouble(ParameterNames.MaxScanDistance, 250.0), 1.0),
