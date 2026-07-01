@@ -3,6 +3,7 @@ namespace WadiTraining.Runtime;
 internal static class ParameterNames
 {
     public const string Version = "Version";
+    public const string Side = "Side";
     public const string BankMode = "BankMode";
     public const string CrownWidth = "CrownWidth";
     public const string LeveeSideSlope = "LeveeSideSlope";

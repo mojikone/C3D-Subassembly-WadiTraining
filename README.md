@@ -15,6 +15,11 @@ Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection
   - `WT_Surface`: unprotected surface links.
   - `WT_Protection`, `WT_ToeScour`, `WT_ToeApron`: protection links.
 
+## Attach In Civil 3D
+
+- The prompt `Select marker point within assembly or [Insert/Replace/Detached]` is normal.
+- Select the assembly marker point, or type `D` to place it detached for a quick layout test.
+
 ## Required Target
 
 - `ExistingGround`: surface target.
@@ -27,7 +32,8 @@ Custom Civil 3D 2026 .NET subassembly for terrain-adaptive wadi levee protection
 
 ## Main Parameters
 
-- `Bank Mode`: Right, Left, or Both.
+- `Side`: standard Civil 3D side selector for one-bank placement.
+- `Bank Mode`: Right, Left, or Both; `Both` is for centerline/thalweg mode.
 - `Crown Width`: levee crown width.
 - `Levee Side Slope`: vertical/horizontal grade; `0.5` means 1V:2H.
 - `Max Scan Distance`: fallback scan length when thalweg is missing.

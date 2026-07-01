@@ -68,6 +68,7 @@ internal sealed class GeometryWriter
     public void DrawLayoutPreview(WadiParameters parameters)
     {
         var direction = parameters.BankMode == BankMode.Left ? -1 : 1;
+        AddPoint(0.0, 0.0, "").IsHidden = true;
         var crown = AddPoint(0.0, 0.0, "WT_CrownPoint");
         var landCrown = AddPoint(-direction * parameters.CrownWidth, 0.0, "WT_CrownPoint");
         var wadiToe = AddPoint(direction * 10.0, -10.0 * parameters.LeveeSideSlope, "WT_WadiToe");

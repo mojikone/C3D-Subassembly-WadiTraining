@@ -97,6 +97,7 @@ public sealed class WadiTrainingLevee : CivilSubassemblyBase
     {
         var writer = new GeometryWriter(runtime, null);
         writer.DrawLayoutPreview(parameters);
+        runtime.State.LayoutModeDisplayType = (CorridorLayoutModeDisplay)4;
     }
 
     private static bool TryGetTargetLocalOffset(CivilRuntime runtime, string targetName, out double localOffset)

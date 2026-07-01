@@ -4,7 +4,7 @@ namespace WadiTraining.Models;
 
 internal sealed class WadiParameters
 {
-    public string Version { get; init; } = "W2.0";
+    public string Version { get; init; } = "W2.1";
     public BankMode BankMode { get; init; } = BankMode.Right;
     public double CrownWidth { get; init; } = 4.0;
     public double LeveeSideSlope { get; init; } = 0.5;
@@ -28,8 +28,8 @@ internal sealed class WadiParameters
     {
         return new WadiParameters
         {
-            Version = runtime.GetString(ParameterNames.Version, "W2.0"),
-            BankMode = (BankMode)Math.Clamp(runtime.GetLong(ParameterNames.BankMode, (long)BankMode.Right), 0, 2),
+            Version = runtime.GetString(ParameterNames.Version, "W2.1"),
+            BankMode = ResolveBankMode(runtime),
             CrownWidth = ClampPositive(runtime.GetDouble(ParameterNames.CrownWidth, 4.0), 0.1),
             LeveeSideSlope = ClampPositive(runtime.GetDouble(ParameterNames.LeveeSideSlope, 0.5), 0.01),
             MaxScanDistance = ClampPositive(runtime.GetDouble(ParameterNames.MaxScanDistance, 250.0), 1.0),
@@ -53,5 +53,21 @@ internal sealed class WadiParameters
     private static double ClampPositive(double value, double minimum)
     {
         return double.IsFinite(value) ? Math.Max(minimum, value) : minimum;
+    }
+
+    private static BankMode ResolveBankMode(CivilRuntime runtime)
+    {
+        var bankMode = (BankMode)Math.Clamp(runtime.GetLong(ParameterNames.BankMode, (long)BankMode.Right), 0, 2);
+        if (bankMode == BankMode.Both)
+        {
+            return BankMode.Both;
+        }
+
+        return runtime.GetLong(ParameterNames.Side, -1) switch
+        {
+            0 => BankMode.Right,
+            1 => BankMode.Left,
+            _ => bankMode
+        };
     }
 }

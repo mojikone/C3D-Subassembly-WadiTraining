@@ -20,7 +20,8 @@ internal static class ParameterDefinitions
 
     public static void RegisterInputParameters(CorridorState state)
     {
-        state.ParamsString.Add(ParameterNames.Version, "W2.0");
+        state.ParamsString.Add(ParameterNames.Version, "W2.1");
+        state.ParamsLong.Add(ParameterNames.Side, -1);
         state.ParamsLong.Add(ParameterNames.BankMode, 0);
         state.ParamsDouble.Add(ParameterNames.CrownWidth, 4.0);
         state.ParamsDouble.Add(ParameterNames.LeveeSideSlope, 0.5);
