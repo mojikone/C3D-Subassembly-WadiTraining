@@ -24,7 +24,7 @@ Copy-Item -LiteralPath $dllSource -Destination $dllTarget -Force
 $xml = @'
 <?xml version="1.0" encoding="utf-8"?>
 <Category xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ItemID idValue="{2B5953A7-B56A-43C0-93D0-703FA1C522E1}" />
+  <ItemID idValue="{94CD3482-D1B6-4979-8780-298139CBD493}" />
   <Properties>
     <ItemName>WadiTraining W2</ItemName>
     <Images>
@@ -44,7 +44,7 @@ $xml = @'
   <Packages />
   <Tools>
     <Tool Name="WadiTrainingLevee_W2">
-      <ItemID idValue="{5750E652-3474-488E-81D7-76D8CA7377F6}" />
+      <ItemID idValue="{40AF70A9-B438-4114-8906-8F121FB71C79}" />
       <Properties>
         <ItemName>WadiTrainingLevee_W2</ItemName>
         <Images>
