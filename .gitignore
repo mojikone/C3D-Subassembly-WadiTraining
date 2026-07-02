@@ -1,7 +1,0 @@
-bin/
-obj/
-reference/
-output/pkt-staging/
-tools/.dotnet-tools/
-*.pdb
-*.deps.json
